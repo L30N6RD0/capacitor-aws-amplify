@@ -55,4 +55,9 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    // Amplify core dependency
+    implementation 'com.amplifyframework:core:1.38.7'
+
+    // AWS Cognito dependency
+    implementation 'com.amplifyframework:aws-auth-cognito:1.38.7'
 }

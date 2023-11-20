@@ -5,7 +5,7 @@ export interface AwsAmplifyPlugin {
     password: string;
   }): Promise<CognitoAuthSession>;
   federatedSignIn(options: {
-    provider: string;
+    provider: CognitoHostedUIIdentityProvider;
   }): Promise<CognitoAuthSession>;
   signOut(): Promise<any>;
 }
@@ -31,4 +31,11 @@ export interface AWSCognitoConfig {
     redirectSignOut: string;
     responseType: 'code';
   };
+}
+export enum CognitoHostedUIIdentityProvider {
+  Cognito = "COGNITO",
+  Google = "Google",
+  Facebook = "Facebook",
+  Amazon = "LoginWithAmazon",
+  Apple = "SignInWithApple"
 }

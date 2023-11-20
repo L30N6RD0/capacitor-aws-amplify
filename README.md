@@ -18,6 +18,7 @@ npx cap sync
 * [`federatedSignIn(...)`](#federatedsignin)
 * [`signOut()`](#signout)
 * [Interfaces](#interfaces)
+* [Enums](#enums)
 
 </docgen-index>
 
@@ -55,12 +56,12 @@ signIn(options: { email: string; password: string; }) => Promise<CognitoAuthSess
 ### federatedSignIn(...)
 
 ```typescript
-federatedSignIn(options: { provider: string; }) => Promise<CognitoAuthSession>
+federatedSignIn(options: { provider: CognitoHostedUIIdentityProvider; }) => Promise<CognitoAuthSession>
 ```
 
-| Param         | Type                               |
-| ------------- | ---------------------------------- |
-| **`options`** | <code>{ provider: string; }</code> |
+| Param         | Type                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ provider: <a href="#cognitohosteduiidentityprovider">CognitoHostedUIIdentityProvider</a>; }</code> |
 
 **Returns:** <code>Promise&lt;<a href="#cognitoauthsession">CognitoAuthSession</a>&gt;</code>
 
@@ -102,5 +103,19 @@ signOut() => Promise<any>
 | **`identityId`**   | <code>string</code>         |
 | **`refreshToken`** | <code>string</code>         |
 | **`deviceKey`**    | <code>string \| null</code> |
+
+
+### Enums
+
+
+#### CognitoHostedUIIdentityProvider
+
+| Members        | Value                          |
+| -------------- | ------------------------------ |
+| **`Cognito`**  | <code>"COGNITO"</code>         |
+| **`Google`**   | <code>"Google"</code>          |
+| **`Facebook`** | <code>"Facebook"</code>        |
+| **`Amazon`**   | <code>"LoginWithAmazon"</code> |
+| **`Apple`**    | <code>"SignInWithApple"</code> |
 
 </docgen-api>
