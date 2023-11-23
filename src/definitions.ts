@@ -7,15 +7,17 @@ export interface AwsAmplifyPlugin {
   federatedSignIn(options: {
     provider: CognitoHostedUIIdentityProvider;
   }): Promise<CognitoAuthSession>;
-  signOut(): Promise<any>;
+  fetchAuthSession(): Promise<CognitoAuthSession>;
+  signOut(): Promise<{status: AwsAmplifyPluginResponseStatus}>;
 }
 
 export interface CognitoAuthSession {
-  accessToken: string;
-  idToken: string;
-  identityId: string;
-  refreshToken: string;
-  deviceKey: string | null;
+  accessToken?: string;
+  idToken?: string;
+  identityId?: string;
+  refreshToken?: string;
+  deviceKey?: string | null;
+  status: AwsAmplifyPluginResponseStatus
 }
 
 export interface AWSCognitoConfig {
@@ -32,6 +34,14 @@ export interface AWSCognitoConfig {
     responseType: 'code';
   };
 }
+
+export enum AwsAmplifyPluginResponseStatus {
+  Ok = 0,
+  Ko = -1,
+  Cancelled = -2,
+  SignedOut = -3
+}
+
 export enum CognitoHostedUIIdentityProvider {
   Cognito = "COGNITO",
   Google = "Google",

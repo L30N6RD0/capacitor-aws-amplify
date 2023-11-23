@@ -16,6 +16,7 @@ npx cap sync
 * [`load(...)`](#load)
 * [`signIn(...)`](#signin)
 * [`federatedSignIn(...)`](#federatedsignin)
+* [`fetchAuthSession()`](#fetchauthsession)
 * [`signOut()`](#signout)
 * [Interfaces](#interfaces)
 * [Enums](#enums)
@@ -68,13 +69,24 @@ federatedSignIn(options: { provider: CognitoHostedUIIdentityProvider; }) => Prom
 --------------------
 
 
+### fetchAuthSession()
+
+```typescript
+fetchAuthSession() => Promise<CognitoAuthSession>
+```
+
+**Returns:** <code>Promise&lt;<a href="#cognitoauthsession">CognitoAuthSession</a>&gt;</code>
+
+--------------------
+
+
 ### signOut()
 
 ```typescript
-signOut() => Promise<any>
+signOut() => Promise<{ status: AwsAmplifyPluginResponseStatus; }>
 ```
 
-**Returns:** <code>Promise&lt;any&gt;</code>
+**Returns:** <code>Promise&lt;{ status: <a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a>; }&gt;</code>
 
 --------------------
 
@@ -96,16 +108,27 @@ signOut() => Promise<any>
 
 #### CognitoAuthSession
 
-| Prop               | Type                        |
-| ------------------ | --------------------------- |
-| **`accessToken`**  | <code>string</code>         |
-| **`idToken`**      | <code>string</code>         |
-| **`identityId`**   | <code>string</code>         |
-| **`refreshToken`** | <code>string</code>         |
-| **`deviceKey`**    | <code>string \| null</code> |
+| Prop               | Type                                                                                      |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| **`accessToken`**  | <code>string</code>                                                                       |
+| **`idToken`**      | <code>string</code>                                                                       |
+| **`identityId`**   | <code>string</code>                                                                       |
+| **`refreshToken`** | <code>string</code>                                                                       |
+| **`deviceKey`**    | <code>string \| null</code>                                                               |
+| **`status`**       | <code><a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a></code> |
 
 
 ### Enums
+
+
+#### AwsAmplifyPluginResponseStatus
+
+| Members         | Value           |
+| --------------- | --------------- |
+| **`Ok`**        | <code>0</code>  |
+| **`Ko`**        | <code>-1</code> |
+| **`Cancelled`** | <code>-2</code> |
+| **`SignedOut`** | <code>-3</code> |
 
 
 #### CognitoHostedUIIdentityProvider

@@ -38,18 +38,18 @@ import java.util.function.Consumer;
 
 public class AwsAmplify {
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public void load(JSObject cognitoConfig, Context context, @NonNull Consumer onSuccess, @NonNull Consumer<Exception> onError) {
+  @RequiresApi(api = Build.VERSION_CODES.N)
+  public void load(JSObject cognitoConfig, Context context, @NonNull Consumer onSuccess, @NonNull Consumer<Exception> onError) {
 
-      JSObject oauth = (JSObject) cognitoConfig.getJSObject("oauth");
+    JSObject oauth = (JSObject) cognitoConfig.getJSObject("oauth");
 
-      try {
-        JSONObject auth = new JSONObject();
-        auth.put("plugins", new JSONObject().put(
+    try {
+      JSONObject auth = new JSONObject();
+      auth.put("plugins", new JSONObject().put(
           "awsCognitoAuthPlugin", new JSONObject().put(
             "IdentityManager", new JSONObject().put(
               "Default", new JSONObject())
-            ).put(
+          ).put(
             "CredentialsProvider", new JSONObject().put(
               "CognitoIdentity", new JSONObject().put(
                 "Default", new JSONObject().put(
@@ -88,97 +88,101 @@ public class AwsAmplify {
               )
             )
           )
-          )
-        );
+        )
+      );
 
-        Amplify.addPlugin(new AWSCognitoAuthPlugin());
-        AuthCategoryConfiguration authConfig = new AuthCategoryConfiguration();
-        authConfig.populateFromJSON(auth);
-        Map<String, CategoryConfiguration> config = new HashMap();
-        config.put("auth", authConfig);
-        AmplifyConfiguration configuration = new AmplifyConfiguration(config);
-        Amplify.configure(configuration, context);
-        onSuccess.accept(null);
-      } catch (AmplifyException e) {
-        onError.accept(e);
-      } catch (JSONException e) {
-        onError.accept(e);
-        throw new RuntimeException(e);
-      }
-
+      Amplify.addPlugin(new AWSCognitoAuthPlugin());
+      AuthCategoryConfiguration authConfig = new AuthCategoryConfiguration();
+      authConfig.populateFromJSON(auth);
+      Map<String, CategoryConfiguration> config = new HashMap();
+      config.put("auth", authConfig);
+      AmplifyConfiguration configuration = new AmplifyConfiguration(config);
+      Amplify.configure(configuration, context);
+      onSuccess.accept(null);
+    } catch (AmplifyException e) {
+      onError.accept(e);
+    } catch (JSONException e) {
+      onError.accept(e);
+      throw new RuntimeException(e);
     }
+
+  }
 
 
   @RequiresApi(api = Build.VERSION_CODES.N)
-  public void federatedSignIn(String providerString, Activity activity, @NonNull Consumer<AuthSignInResult> onSuccess,
-                              @NonNull Consumer<AuthException> onError) {
-    AuthProvider provider = null;
+  public void federatedSignIn(String providerString, Activity activity, @NonNull Consumer<JSObject> onSuccess,
+                              @NonNull Consumer<Exception> onError) {
+    AuthProvider provider = AuthProvider.google();
 
-    if (providerString != null) {
-      if (providerString.equals("Google")) {
-        provider = AuthProvider.google();
+    if (providerString.equals("facebook")) {
+      provider = AuthProvider.facebook();
+    }
+
+    if (providerString.equals("SignInWithApple")) {
+      provider = AuthProvider.apple();
+    }
+
+    AuthProvider finalProvider = provider;
+    fetchAuthSession(response -> {
+      var status = -1;
+
+      try {
+        status = response.getInt("status");
+      } catch (JSONException e) {
+        onError.accept(e);
+        return;
       }
 
-      if (providerString.equals("facebook")) {
-        provider = AuthProvider.facebook();
-      }
-
-      if (providerString.equals("apple")) {
-        provider = AuthProvider.apple();
-      }
-
-
-      if (provider != null) {
+      if (status == 0) {
+        onSuccess.accept(response);
+      } else {
         Amplify.Auth.signInWithSocialWebUI(
-          provider,
+          finalProvider,
           activity,
           result -> {
-            onSuccess.accept(result);
-
-//            mAwsService.fetchAuthSession(
-//              call::resolve,
-//              error -> {
-//                Log.e(TAG, "session error: ", error);
-//                call.reject(error.toString());
-//              });
+            fetchAuthSession(
+              onSuccess,
+              onError);
           },
           error -> {
             onError.accept(error);
           });
       }
-    }
+    }, error -> {
+      onError.accept(error);
+    });
+
+
   }
 
   @RequiresApi(api = Build.VERSION_CODES.N)
   public void fetchAuthSession(@Nullable Consumer<JSObject> onSuccess,
                                @Nullable Consumer<Exception> onError) {
-//    mFetching = true;
-
     fetchSessionInternal(
       authSession -> {
-//        mFetching = false;
 
         if (authSession != null && onSuccess != null) {
-          onSuccess.accept(authSession.toJson());
+          JSObject ret = new JSObject();
+          ret.put("status", 0);
+          ret.put("accessToken", authSession.getAccessToken());
+          ret.put("idToken", authSession.getIdToken());
+          ret.put("identityId", authSession.getIdentityId());
+          ret.put("refreshToken", authSession.getRefreshToken());
+          ret.put("deviceKey", authSession.getDeviceKey());
+          onSuccess.accept(ret);
         }
       },
       error -> {
-//        mFetching = false;
-
         if (onError != null) {
           String message = error.getMessage();
           String suggestion = error.getRecoverySuggestion();
           Throwable cause = error.getCause();
-
-//          AwsAuthException authException;
-//
-//          if (message != null && cause != null) {
-//            authException = new AwsAuthException(message, cause, suggestion);
-//          } else
-//            authException = new AwsAuthException(
-//              Objects.requireNonNullElse(message, "Aws Auth Error"), "Generic");
-
-          onError.accept(error);
+          JSObject ret = new JSObject();
+          ret.put("status", -1);
+          if (AuthException.SignedOutException.class.isInstance(error)) {
+            ret.put("status", -3);
+          }
+          onSuccess.accept(ret);
         }
       });
   }
@@ -242,15 +246,15 @@ public class AwsAmplify {
       String idToken = tokens.getIdToken().getTokenString();
       String refreshToken = tokens.getRefreshToken().getTokenString();
 
-      DeviceOperations deviceOperations = mClient.getDeviceOperations();
-      ListDevicesResult devicesList = deviceOperations.list();
-      List<Device> devices = devicesList.getDevices();
+//      DeviceOperations deviceOperations = mClient.getDeviceOperations();
+//      ListDevicesResult devicesList = deviceOperations.list();
+//      List<Device> devices = devicesList.getDevices();
 
       String deviceKey = null;
 
-      if (!devices.isEmpty()) {
-        deviceKey = deviceOperations.get().getDeviceKey();
-      }
+//      if (!devices.isEmpty()) {
+//        deviceKey = deviceOperations.get().getDeviceKey();
+//      }
 
       return AwsAuthSession.builder(mClient.getIdentityId())
         .setAccessToken(accessToken)
@@ -270,12 +274,18 @@ public class AwsAmplify {
    * @param onError   error callback.
    */
   @RequiresApi(api = Build.VERSION_CODES.N)
-  public void signOut(@NonNull Consumer<Boolean> onSuccess,
+  public void signOut(@NonNull Consumer<JSObject> onSuccess,
                       @NonNull Consumer<AuthException> onError) {
+    JSObject ret = new JSObject();
+
     Amplify.Auth.signOut(
-      () -> onSuccess.accept(true),
+      () -> {
+        ret.put("status", 0);
+        onSuccess.accept(ret);
+      },
       error -> {
-         onError.accept(error);
+        ret.put("status", -1);
+        onSuccess.accept(ret);
       }
     );
   }

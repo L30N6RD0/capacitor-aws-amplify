@@ -34,7 +34,7 @@ public class AwsAmplifyPlugin extends Plugin {
   public void signOut(PluginCall call) {
 
     implementation.signOut(
-      result ->  call.resolve(),
+      result ->  call.resolve(result),
       error -> {
         call.reject(error.toString());
       });
@@ -48,22 +48,20 @@ public class AwsAmplifyPlugin extends Plugin {
     implementation.federatedSignIn(
       provider,
       this.getActivity(),
-      result -> call.resolve(),
+      result -> call.resolve(result),
       error -> {
         call.reject(error.toString());
       });
-//      onSuccess: { data in
-//      self.implementation.fetchAuthSession(
-//        onSuccess: {session in
-//        call.resolve(session)
-//      },
-//      onError: {error in
-//        call.reject(error.localizedDescription)
-//      })
+  }
 
-//    onError: { error in
-//      print(error)
-//      call.reject(error.localizedDescription)
-//    })
+  @RequiresApi(api = Build.VERSION_CODES.N)
+  @PluginMethod
+  public void fetchAuthSession(PluginCall call) {
+
+    implementation.fetchAuthSession(
+      result -> call.resolve(result),
+      error -> {
+        call.reject(error.toString());
+      });
   }
 }

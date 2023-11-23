@@ -48,7 +48,7 @@ import AWSMobileClient
     
     public func federatedSignIn(
         provider: String,
-        onSuccess: @escaping (AuthSignInResult) -> (),
+        onSuccess: @escaping (JSObject) -> (),
         onError: @escaping (any Error) -> ()
     ) {
         var authProvider: AuthProvider
@@ -72,13 +72,20 @@ import AWSMobileClient
         DispatchQueue.main.async {
             Amplify.Auth.signInWithWebUI(for: authProvider,
                                         presentationAnchor: UIApplication.shared.windows.first!, options: .preferPrivateSession()) { result in
+                var ret: JSObject = [:]
                 switch result {
-                case .success(let result):
-                    print("\(self.TAG) federatedSignIn effettuato con successo: \(result)")
-                    onSuccess(result)
+                case .success(_):
+                    ret["status"] = 0
+                    onSuccess(ret)
                 case .failure(let error):
-                    print("\(self.TAG) Impossibile effettuare il federatedSignIn: \(error)")
-                    onError(error)
+                    let cognitoAuthError = error.underlyingError as? AWSCognitoAuthError
+                    switch cognitoAuthError {
+                    case .userCancelled:
+                        ret["status"] = -2
+                    default:
+                        ret["status"] = -1
+                    }                  
+                    onSuccess(ret)
                 }
             }
         }
@@ -86,16 +93,20 @@ import AWSMobileClient
     }
     
     public func signOut(
-        onSuccess: @escaping (Bool) -> (),
+        onSuccess: @escaping (JSObject) -> (),
         onError: @escaping (any Error) -> ()
     ) {
         Amplify.Auth.signOut() { result in
+            var ret: JSObject = [:]
+            
             switch result {
                 case .success:
-                    onSuccess(true)
+                    ret["status"] = 0
+                    onSuccess(ret)
                 case .failure(let authError):
                     print("\(self.TAG) Sign out failed with error \(authError)")
-                    onError(authError)
+                    ret["status"] = -1
+                    onSuccess(ret)
                 }
         }
     }
@@ -133,16 +144,6 @@ import AWSMobileClient
                     ret["idToken"] = tokens.idToken
                     ret["refreshToken"] = tokens.refreshToken
                     
-//                    Amplify.Auth.fetchDevices { result in
-//                      switch result {
-//                      case .success(let devices):
-//                        print("\(self.TAG) devices", devices)
-//                        print("\(self.TAG) device IDs", devices.map(\.id))
-//                      case .failure(let error):
-//                        print("\(self.TAG) error", error)
-//                      }
-//                    }
-                    
                     // Retrieve the device key from the payload of access token
                     let accessToken = tokens.accessToken as NSString
 //                    print("\(self.TAG) accessToken - \(tokens.idToken) ")
@@ -151,6 +152,9 @@ import AWSMobileClient
                     let deviceKey = accessTokenPayload?.device_key
 
                     ret["deviceKey"] = deviceKey
+                    ret["status"] = 0
+                } else {
+                    ret["status"] = -1
                 }
                 
 //                self.sessionSubject.onNext(session)
@@ -159,8 +163,21 @@ import AWSMobileClient
 //                print("\(self.TAG) - \(ret)")
                 onSuccess(ret)
             } catch {
+                var ret: JSObject = [:]
+                ret["status"] = -1
+                if let authError = error as? AuthError
+                    {
+                    let cognitoAuthError = authError
+                    switch cognitoAuthError {
+                    case .signedOut:
+                        ret["status"] = -3
+                    default:
+                        ret["status"] = -1
+                    }
+                }
+               
+                onSuccess(ret)
                 print("\(self.TAG) Fetch auth session failed with error - \(error)")
-                onError(error)
             }
         }
     }

@@ -47,10 +47,8 @@ public class AwsAmplifyPlugin: CAPPlugin {
     
     @objc func signOut(_ call: CAPPluginCall) {
         self.implementation.signOut(
-            onSuccess: { success in
-            call.resolve([
-                "logout": success
-            ])
+            onSuccess: { response in
+            call.resolve(response)
         }, onError: { error in
             call.reject(error.localizedDescription)
         })
@@ -59,22 +57,42 @@ public class AwsAmplifyPlugin: CAPPlugin {
     @objc func federatedSignIn(_ call: CAPPluginCall) {
         let provider = call.getString("provider") ?? ""
         
-        self.implementation.federatedSignIn(
-            provider: provider,
-            onSuccess: { data in
-                print("federatedSignIn onSuccess \(data)")
-                self.implementation.fetchAuthSession(
+        self.implementation.fetchAuthSession(
+            onSuccess: {session in
+                if(session["status"] as! Int == 0) {
+                    call.resolve(session)
+                } else {
+                    self.implementation.federatedSignIn(
+                        provider: provider,
+                        onSuccess: { result in
+                            if(result["status"] as! Int == 0) {
+                                self.fetchAuthSession(call)
+                            } else {
+                                call.resolve(result)
+                            }
+                        },
+                        onError: { error in
+                            print(error)
+                            call.reject(error.localizedDescription)
+                        })
+                }
+                
+            },
+            onError: {error in
+                call.reject(error.localizedDescription)
+            })
+        
+        
+    }
+    @objc func fetchAuthSession(_ call: CAPPluginCall) {
+
+       self.implementation.fetchAuthSession(
                     onSuccess: {session in
                         call.resolve(session)
                     },
                     onError: {error in
                         call.reject(error.localizedDescription)
                     })
-            },
-            onError: { error in
-                print(error)
-                call.reject(error.localizedDescription)
-            })
     }
 
     // var permissionCallID: String?

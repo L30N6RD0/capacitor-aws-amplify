@@ -8,4 +8,5 @@ CAP_PLUGIN(AwsAmplifyPlugin, "AwsAmplify",
            CAP_PLUGIN_METHOD(signIn, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(signOut, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(federatedSignIn, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(fetchAuthSession, CAPPluginReturnPromise);
 )

@@ -4,10 +4,11 @@ import type { CognitoUser } from 'amazon-cognito-identity-js';
 import { Amplify, Auth } from 'aws-amplify';
 
 import type {
-  AWSCognitoConfig,
   AwsAmplifyPlugin,
+  AWSCognitoConfig,
   CognitoAuthSession,
 } from './definitions';
+import { AwsAmplifyPluginResponseStatus } from './definitions';
 
 export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
   private cognitoConfig?: AWSCognitoConfig;
@@ -20,65 +21,103 @@ export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
     email: string;
     password: string;
   }): Promise<CognitoAuthSession> {
-    // console.log(LOG_PREFIX, options);
     if (!this.cognitoConfig) {
       throw new Error('call load first');
     }
-    return new Promise((resolve, reject) => {
-      Auth.signIn(options.email, options.password).then((user: CognitoUser) => {
-        const cognitoAuthSession = this.getCognitoAuthSession(
-          user,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          this.cognitoConfig!.aws_cognito_identity_pool_id,
-        );
-        cognitoAuthSession ? resolve(cognitoAuthSession) : reject();
-      });
-    });
+    try {
+      const session = await this.fetchAuthSession();
+      if (session.status === AwsAmplifyPluginResponseStatus.Ok) {
+        return session;
+      }
+
+      const user = (await Auth.signIn(
+        options.email,
+        options.password,
+      )) as CognitoUser;
+
+      return this.getCognitoAuthSession(
+        user,
+        this.cognitoConfig.aws_cognito_identity_pool_id,
+      );
+    } catch (error) {
+      return this.handleError(error, 'signIn');
+    }
   }
 
   async federatedSignIn(options: {
     provider: string;
   }): Promise<CognitoAuthSession> {
-    // console.log(LOG_PREFIX, options);
     if (!this.cognitoConfig) {
       throw new Error('call load first');
     }
-    return new Promise((resolve, reject) => {
-      Auth.federatedSignIn(options as FederatedSignInOptions)
-        .then(_ => {
-          // console.log(LOG_PREFIX + " credential", cred);
-          Auth.currentAuthenticatedUser().then(user => {
-            // console.log(LOG_PREFIX + " user", user);
-            const cognitoAuthSession = this.getCognitoAuthSession(
-              user,
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              this.cognitoConfig!.aws_cognito_identity_pool_id,
-            );
-            cognitoAuthSession ? resolve(cognitoAuthSession) : reject();
-          });
-        })
-        .catch(err => reject(err));
-    });
+    try {
+      const session = await this.fetchAuthSession();
+      if (session.status === AwsAmplifyPluginResponseStatus.Ok) {
+        return session;
+      }
+
+      await Auth.federatedSignIn(options as FederatedSignInOptions);
+      return this.fetchAuthSession();
+    } catch (error) {
+      return this.handleError(error, 'federatedSignIn');
+    }
   }
 
-  async signOut(): Promise<any> {
-    return Auth.signOut();
+  async fetchAuthSession(): Promise<CognitoAuthSession> {
+    if (!this.cognitoConfig) {
+      throw new Error('call load first');
+    }
+    try {
+      const user = await Auth.currentAuthenticatedUser();
+      const cognitoAuthSession: CognitoAuthSession = this.getCognitoAuthSession(
+        user,
+        this.cognitoConfig.aws_cognito_identity_pool_id,
+      );
+
+      return cognitoAuthSession;
+    } catch (error) {
+      return this.handleError(error, 'fetchAuthSession');
+    }
+  }
+
+  async signOut(): Promise<{ status: AwsAmplifyPluginResponseStatus }> {
+    if (!this.cognitoConfig) {
+      throw new Error('call load first');
+    }
+    return Auth.signOut()
+      .then(() => ({
+        status: AwsAmplifyPluginResponseStatus.Ok,
+      }))
+      .catch(error => this.handleError(error, 'signOut'));
   }
 
   private getCognitoAuthSession(user: CognitoUser, identityId: string) {
     const userSession = user.getSignInUserSession();
 
-    if (userSession) {
-      const res: CognitoAuthSession = {
-        accessToken: userSession.getAccessToken().getJwtToken(),
-        idToken: userSession.getIdToken().getJwtToken(),
-        identityId: identityId,
-        refreshToken: userSession.getRefreshToken().getToken(),
-        deviceKey: userSession.getAccessToken().decodePayload().device_key,
-      };
+    const res: CognitoAuthSession = {
+      accessToken: userSession?.getAccessToken().getJwtToken(),
+      idToken: userSession?.getIdToken().getJwtToken(),
+      identityId: identityId,
+      refreshToken: userSession?.getRefreshToken().getToken(),
+      deviceKey: userSession?.getAccessToken().decodePayload().device_key,
+      status: userSession
+        ? AwsAmplifyPluginResponseStatus.Ok
+        : AwsAmplifyPluginResponseStatus.Ko,
+    };
+    return res;
+  }
+
+  private handleError(error: any, from: string): CognitoAuthSession {
+    console.error(`[CAPACITOR AWS AMPLIFY] - error from ${from}: `, error);
+    const res: CognitoAuthSession = {
+      status: AwsAmplifyPluginResponseStatus.Ko,
+    };
+    if (typeof error !== 'string') {
       return res;
     }
-
-    return null;
+    if (error.includes('not authenticated')) {
+      res.status = AwsAmplifyPluginResponseStatus.SignedOut;
+    }
+    return res;
   }
 }
