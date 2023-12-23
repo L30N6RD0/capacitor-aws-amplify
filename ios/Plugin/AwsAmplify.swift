@@ -7,6 +7,8 @@ import AWSMobileClient
 
 @objc public class AwsAmplify: NSObject {
     private let TAG = "[Capacitor AwsAmplify]"
+    
+    private var isLoaded = false
 //    static public let instance = AwsAmplify()
     
 //    private let sessionSubject = BehaviorSubject<Optional<AuthSession>>(value: nil)
@@ -256,6 +258,11 @@ import AWSMobileClient
         
         let ampConfig: AmplifyConfiguration = AmplifyConfiguration.init(auth:auth)
         do {
+            if (isLoaded) {
+                onSuccess()
+                return
+            }
+            isLoaded = true
             try Amplify.add(plugin: AWSCognitoAuthPlugin())
             try Amplify.configure(ampConfig)
             print("\(self.TAG) Amplify configured with auth plugin")
