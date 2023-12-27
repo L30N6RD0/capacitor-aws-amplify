@@ -37,9 +37,16 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class AwsAmplify {
-
+  boolean isLoaded;
   @RequiresApi(api = Build.VERSION_CODES.N)
   public void load(JSObject cognitoConfig, Context context, @NonNull Consumer onSuccess, @NonNull Consumer<Exception> onError) {
+
+
+    if (isLoaded) {
+      onSuccess.accept(null);
+      return;
+    }
+    isLoaded = true;
 
     JSObject oauth = (JSObject) cognitoConfig.getJSObject("oauth");
 
@@ -188,6 +195,31 @@ public class AwsAmplify {
   }
 
   @RequiresApi(api = Build.VERSION_CODES.N)
+  public void getUserAttributes(@Nullable Consumer<JSObject> onSuccess,
+                               @Nullable Consumer<Exception> onError) {
+    fetchUserAttributesInternal(
+      userAttributes -> {
+          JSObject ret = new JSObject();
+          ret.put("status", 0);
+          ret.put("userAttributes", userAttributes);
+          onSuccess.accept(ret);
+      },
+      error -> {
+        if (onError != null) {
+          String message = error.getMessage();
+          String suggestion = error.getRecoverySuggestion();
+          Throwable cause = error.getCause();
+          JSObject ret = new JSObject();
+          ret.put("status", -1);
+          if (AuthException.SignedOutException.class.isInstance(error)) {
+            ret.put("status", -3);
+          }
+          onSuccess.accept(ret);
+        }
+      });
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.N)
   private void fetchSessionInternal(@Nullable Consumer<AwsAuthSession> onSuccess,
                                     @Nullable Consumer<AuthException> onError) {
     Amplify.Auth.fetchAuthSession(
@@ -227,6 +259,27 @@ public class AwsAmplify {
             onError.accept(error);
           }
         }
+      },
+      error -> {
+//        Log.e(TAG, "Session error: ", error);
+
+        if (onError != null) {
+          onError.accept(error);
+        }
+      });
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.N)
+  private void fetchUserAttributesInternal(@Nullable Consumer<JSObject> onSuccess,
+                                    @Nullable Consumer<AuthException> onError) {
+    Amplify.Auth.fetchUserAttributes(
+      attributes -> {
+        var userAttributes = new JSObject();
+        attributes.forEach(attribute -> {
+          userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
+        });
+
+        onSuccess.accept(userAttributes);
       },
       error -> {
 //        Log.e(TAG, "Session error: ", error);

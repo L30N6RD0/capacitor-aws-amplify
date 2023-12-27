@@ -68,7 +68,7 @@ export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
       throw new Error('call load first');
     }
     try {
-      const user = await Auth.currentAuthenticatedUser();
+      const user: CognitoUser = await Auth.currentAuthenticatedUser();
       const cognitoAuthSession: CognitoAuthSession = this.getCognitoAuthSession(
         user,
         this.cognitoConfig.aws_cognito_identity_pool_id,
@@ -77,6 +77,40 @@ export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
       return cognitoAuthSession;
     } catch (error) {
       return this.handleError(error, 'fetchAuthSession');
+    }
+  }
+
+  async getUserAttributes(): Promise<{
+    status: AwsAmplifyPluginResponseStatus;
+    userAttributes: Record<string, string>;
+  }> {
+    if (!this.cognitoConfig) {
+      throw new Error('call load first');
+    }
+    try {
+      const user: CognitoUser = await Auth.currentAuthenticatedUser();
+      return new Promise((resolve, reject) => {
+        user.getUserAttributes((error, attributes) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve({
+            status: AwsAmplifyPluginResponseStatus.Ok,
+            userAttributes:
+              attributes?.reduce(
+                (acc, data) => ({ ...acc, [data.Name]: data.Value }),
+                {},
+              ) || {},
+          });
+          return;
+        });
+      });
+    } catch (error) {
+      return {
+        ...this.handleError(error, 'getUserAttributes'),
+        userAttributes: {},
+      };
     }
   }
 

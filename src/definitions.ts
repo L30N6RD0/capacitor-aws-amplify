@@ -8,7 +8,11 @@ export interface AwsAmplifyPlugin {
     provider: CognitoHostedUIIdentityProvider;
   }): Promise<CognitoAuthSession>;
   fetchAuthSession(): Promise<CognitoAuthSession>;
-  signOut(): Promise<{status: AwsAmplifyPluginResponseStatus}>;
+  getUserAttributes(): Promise<{
+    status: AwsAmplifyPluginResponseStatus;
+    userAttributes: Record<string, string>;
+  }>;
+  signOut(): Promise<{ status: AwsAmplifyPluginResponseStatus }>;
 }
 
 export interface CognitoAuthSession {
@@ -17,7 +21,7 @@ export interface CognitoAuthSession {
   identityId?: string;
   refreshToken?: string;
   deviceKey?: string | null;
-  status: AwsAmplifyPluginResponseStatus
+  status: AwsAmplifyPluginResponseStatus;
 }
 
 export interface AWSCognitoConfig {
@@ -39,13 +43,13 @@ export enum AwsAmplifyPluginResponseStatus {
   Ok = 0,
   Ko = -1,
   Cancelled = -2,
-  SignedOut = -3
+  SignedOut = -3,
 }
 
 export enum CognitoHostedUIIdentityProvider {
-  Cognito = "COGNITO",
-  Google = "Google",
-  Facebook = "Facebook",
-  Amazon = "LoginWithAmazon",
-  Apple = "SignInWithApple"
+  Cognito = 'COGNITO',
+  Google = 'Google',
+  Facebook = 'Facebook',
+  Amazon = 'LoginWithAmazon',
+  Apple = 'SignInWithApple',
 }

@@ -17,8 +17,10 @@ npx cap sync
 * [`signIn(...)`](#signin)
 * [`federatedSignIn(...)`](#federatedsignin)
 * [`fetchAuthSession()`](#fetchauthsession)
+* [`getUserAttributes()`](#getuserattributes)
 * [`signOut()`](#signout)
 * [Interfaces](#interfaces)
+* [Type Aliases](#type-aliases)
 * [Enums](#enums)
 
 </docgen-index>
@@ -80,6 +82,17 @@ fetchAuthSession() => Promise<CognitoAuthSession>
 --------------------
 
 
+### getUserAttributes()
+
+```typescript
+getUserAttributes() => Promise<{ status: AwsAmplifyPluginResponseStatus; userAttributes: Record<string, string>; }>
+```
+
+**Returns:** <code>Promise&lt;{ status: <a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a>; userAttributes: <a href="#record">Record</a>&lt;string, string&gt;; }&gt;</code>
+
+--------------------
+
+
 ### signOut()
 
 ```typescript
@@ -118,6 +131,16 @@ signOut() => Promise<{ status: AwsAmplifyPluginResponseStatus; }>
 | **`status`**       | <code><a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a></code> |
 
 
+### Type Aliases
+
+
+#### Record
+
+Construct a type with a set of properties K of type T
+
+<code>{ [P in K]: T; }</code>
+
+
 ### Enums
 
 
@@ -135,10 +158,10 @@ signOut() => Promise<{ status: AwsAmplifyPluginResponseStatus; }>
 
 | Members        | Value                          |
 | -------------- | ------------------------------ |
-| **`Cognito`**  | <code>"COGNITO"</code>         |
-| **`Google`**   | <code>"Google"</code>          |
-| **`Facebook`** | <code>"Facebook"</code>        |
-| **`Amazon`**   | <code>"LoginWithAmazon"</code> |
-| **`Apple`**    | <code>"SignInWithApple"</code> |
+| **`Cognito`**  | <code>'COGNITO'</code>         |
+| **`Google`**   | <code>'Google'</code>          |
+| **`Facebook`** | <code>'Facebook'</code>        |
+| **`Amazon`**   | <code>'LoginWithAmazon'</code> |
+| **`Apple`**    | <code>'SignInWithApple'</code> |
 
 </docgen-api>

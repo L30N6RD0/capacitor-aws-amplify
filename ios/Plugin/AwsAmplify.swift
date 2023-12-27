@@ -184,6 +184,43 @@ import AWSMobileClient
         }
     }
     
+    public func getUserAttributes(
+        onSuccess: @escaping (JSObject) -> (),
+        onError: @escaping (any Error) -> ()
+    ) {
+        var ret: JSObject = [:]
+        Amplify.Auth.fetchUserAttributes { result in
+            do {
+                let attributes = try result.get()
+                
+                var userAttributes: JSObject = [:]
+                
+                attributes.forEach { attribute in
+                    userAttributes[attribute.key.rawValue] = attribute.value
+                }
+                ret["userAttributes"] = userAttributes
+                ret["status"] = 0
+                
+                print("\(self.TAG) - Fetch user attributes successfully")
+                onSuccess(ret)
+            } catch {
+                ret["status"] = -1
+                if let authError = error as? AuthError
+                    {
+                    let cognitoAuthError = authError
+                    switch cognitoAuthError {
+                    case .signedOut:
+                        ret["status"] = -3
+                    default:
+                        ret["status"] = -1
+                    }
+                }
+                onSuccess(ret)
+                print("\(self.TAG) Fetch user attributes failed with error - \(error)")
+            }
+        }
+    }
+    
     public func getCurrentUser() -> AuthUser {
         return Amplify.Auth.getCurrentUser()!
     }

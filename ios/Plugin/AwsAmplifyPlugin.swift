@@ -94,6 +94,17 @@ public class AwsAmplifyPlugin: CAPPlugin {
                         call.reject(error.localizedDescription)
                     })
     }
+    
+    @objc func getUserAttributes(_ call: CAPPluginCall) {
+
+       self.implementation.getUserAttributes(
+                    onSuccess: {session in
+                        call.resolve(session)
+                    },
+                    onError: {error in
+                        call.reject(error.localizedDescription)
+                    })
+    }
 
     // var permissionCallID: String?
     // var locationManager: CLLocationManager?
