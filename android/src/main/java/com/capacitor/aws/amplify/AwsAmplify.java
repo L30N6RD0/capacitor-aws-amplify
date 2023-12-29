@@ -10,21 +10,21 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobile.client.DeviceOperations;
-import com.amazonaws.mobile.client.results.Device;
-import com.amazonaws.mobile.client.results.ListDevicesResult;
 import com.amazonaws.mobile.client.results.Tokens;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCategoryConfiguration;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.result.AuthSessionResult;
-import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 
 import org.json.JSONException;
@@ -33,10 +33,12 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class AwsAmplify {
+
+  private String TAG = "AwsAmplify";
   boolean isLoaded;
   @RequiresApi(api = Build.VERSION_CODES.N)
   public void load(JSObject cognitoConfig, Context context, @NonNull Consumer onSuccess, @NonNull Consumer<Exception> onError) {
@@ -220,6 +222,83 @@ public class AwsAmplify {
   }
 
   @RequiresApi(api = Build.VERSION_CODES.N)
+  public void updateUserAttributes(JSArray attributes,
+                                   @Nullable Consumer<JSObject> onSuccess,
+                                   @Nullable Consumer<Exception> onError) {
+
+    try {
+       var attr = attributes.<JSONObject>toList().stream().map(item ->{
+         try {
+           return new AuthUserAttribute(this.getAttributeKey(item.getString("name")), item.getString("value"));
+         } catch (JSONException e) {
+           throw new RuntimeException(e);
+         }
+       });
+
+      updateUserAttributesInternal(
+        attr.collect(Collectors.toList()),
+        userAttributes -> {
+          JSObject ret = new JSObject();
+          ret.put("status", 0);
+          ret.put("userAttributes", userAttributes);
+          onSuccess.accept(ret);
+        },
+        error -> {
+          if (onError != null) {
+            String message = error.getMessage();
+            String suggestion = error.getRecoverySuggestion();
+            Throwable cause = error.getCause();
+            JSObject ret = new JSObject();
+            ret.put("status", -1);
+            if (AuthException.SignedOutException.class.isInstance(error)) {
+              ret.put("status", -3);
+            }
+            onSuccess.accept(ret);
+          }
+        });
+
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
+
+
+  }
+
+  private AuthUserAttributeKey getAttributeKey(String key){
+    switch(key){
+      case "address":
+        return AuthUserAttributeKey.address();
+      case "birthDate":
+        return AuthUserAttributeKey.birthdate();
+      case "email":
+        return AuthUserAttributeKey.email();
+      case "familyName":
+        return AuthUserAttributeKey.familyName();
+      case "gender":
+        return AuthUserAttributeKey.gender();
+      case "givenName":
+        return AuthUserAttributeKey.givenName();
+      case "locale":
+        return AuthUserAttributeKey.locale();
+      case "middleName":
+        return AuthUserAttributeKey.middleName();
+      case "name":
+        return AuthUserAttributeKey.name();
+      case "nickname":
+        return AuthUserAttributeKey.nickname();
+      case "phoneNumber":
+        return AuthUserAttributeKey.phoneNumber();
+      case "picture":
+        return AuthUserAttributeKey.picture();
+      case "preferredUsername":
+        return AuthUserAttributeKey.preferredUsername();
+      default:
+        return AuthUserAttributeKey.custom("custom:" + key);
+    }
+  }
+
+
+  @RequiresApi(api = Build.VERSION_CODES.N)
   private void fetchSessionInternal(@Nullable Consumer<AwsAuthSession> onSuccess,
                                     @Nullable Consumer<AuthException> onError) {
     Amplify.Auth.fetchAuthSession(
@@ -261,7 +340,7 @@ public class AwsAmplify {
         }
       },
       error -> {
-//        Log.e(TAG, "Session error: ", error);
+        Log.e(TAG, "fetchSessionInternal error: ", error);
 
         if (onError != null) {
           onError.accept(error);
@@ -276,13 +355,29 @@ public class AwsAmplify {
       attributes -> {
         var userAttributes = new JSObject();
         attributes.forEach(attribute -> {
-          userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
+          userAttributes.put(attribute.getKey().getKeyString().replaceFirst("custom:", ""), attribute.getValue());
         });
 
         onSuccess.accept(userAttributes);
       },
       error -> {
-//        Log.e(TAG, "Session error: ", error);
+        Log.e(TAG, "fetchUserAttributesInternal error: ", error);
+        if (onError != null) {
+          onError.accept(error);
+        }
+      });
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.N)
+  private void updateUserAttributesInternal(List<AuthUserAttribute> attributes,
+                                            @Nullable Consumer<JSObject> onSuccess,
+                                            @Nullable Consumer<AuthException> onError) {
+    Amplify.Auth.updateUserAttributes(attributes, AuthUpdateUserAttributesOptions.defaults(),
+      result -> {
+      this.fetchUserAttributesInternal(onSuccess, onError);
+      },
+      error -> {
+        Log.e(TAG, "updateUserAttributesInternal error: ", error);
 
         if (onError != null) {
           onError.accept(error);

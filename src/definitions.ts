@@ -12,6 +12,12 @@ export interface AwsAmplifyPlugin {
     status: AwsAmplifyPluginResponseStatus;
     userAttributes: Record<string, string>;
   }>;
+  updateUserAttributes(options: {
+    attributes: { name: AuthUserAttributeKey | string; value: string }[];
+  }): Promise<{
+    status: AwsAmplifyPluginResponseStatus;
+    userAttributes: Record<string, string>;
+  }>;
   signOut(): Promise<{ status: AwsAmplifyPluginResponseStatus }>;
 }
 
@@ -52,4 +58,45 @@ export enum CognitoHostedUIIdentityProvider {
   Facebook = 'Facebook',
   Amazon = 'LoginWithAmazon',
   Apple = 'SignInWithApple',
+}
+
+export enum AuthUserAttributeKey {
+  /// Attribute key for user's address
+  address = 'address',
+
+  /// Attribute key for user's birthdate
+  birthDate = 'birthDate',
+
+  /// Attribute key for user's email
+  email = 'email',
+
+  /// Attribute key for user's family name
+  familyName = 'familyName',
+
+  /// Attribute key for user's gender
+  gender = 'gender',
+
+  /// Attribute key for user's given name
+  givenName = 'givenName',
+
+  /// Attribute key for user's locale
+  locale = 'locale',
+
+  /// Attribute key for user's middle name
+  middleName = 'middleName',
+
+  /// Attribute key for user's name
+  name = 'name',
+
+  /// Attribute key for user's nickname
+  nickname = 'nickname',
+
+  /// Attribute key for user's phone number
+  phoneNumber = 'phoneNumber',
+
+  /// Attribute key for user's picture
+  picture = 'picture',
+
+  /// Attribute key for user's preferred user name
+  preferredUsername = 'preferredUsername',
 }

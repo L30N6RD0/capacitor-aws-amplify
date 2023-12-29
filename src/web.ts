@@ -3,7 +3,8 @@ import { WebPlugin } from '@capacitor/core';
 import type { CognitoUser } from 'amazon-cognito-identity-js';
 import { Amplify, Auth } from 'aws-amplify';
 
-import type {
+import {
+  AuthUserAttributeKey,
   AwsAmplifyPlugin,
   AWSCognitoConfig,
   CognitoAuthSession,
@@ -99,7 +100,7 @@ export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
             status: AwsAmplifyPluginResponseStatus.Ok,
             userAttributes:
               attributes?.reduce(
-                (acc, data) => ({ ...acc, [data.Name]: data.Value }),
+                (acc, data) => ({ ...acc, [data.Name.replace('custom:', '')]: data.Value }),
                 {},
               ) || {},
           });
@@ -109,6 +110,50 @@ export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
     } catch (error) {
       return {
         ...this.handleError(error, 'getUserAttributes'),
+        userAttributes: {},
+      };
+    }
+  }
+
+  async updateUserAttributes(options: {
+    attributes: { name: AuthUserAttributeKey | string; value: string }[];
+  }): Promise<{
+    status: AwsAmplifyPluginResponseStatus;
+    userAttributes: Record<string, string>;
+  }> {
+    if (!this.cognitoConfig) {
+      throw new Error('call load first');
+    }
+    try {
+      const user: CognitoUser = await Auth.currentAuthenticatedUser();
+      await new Promise<{
+        status: AwsAmplifyPluginResponseStatus;
+      }>((resolve, reject) => {
+        user.updateAttributes(
+          options.attributes.map(({ name, value }) => ({
+            Name: Object.values(AuthUserAttributeKey).includes(
+              name as AuthUserAttributeKey,
+            )
+              ? name
+              : `custom:${name}`,
+            Value: value,
+          })),
+          error => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            resolve({
+              status: AwsAmplifyPluginResponseStatus.Ok,
+            });
+            return;
+          },
+        );
+      });
+      return this.getUserAttributes();
+    } catch (error) {
+      return {
+        ...this.handleError(error, 'updateUserAttributes'),
         userAttributes: {},
       };
     }

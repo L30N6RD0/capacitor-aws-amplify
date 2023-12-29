@@ -9,15 +9,15 @@ import AWSMobileClient
     private let TAG = "[Capacitor AwsAmplify]"
     
     private var isLoaded = false
-//    static public let instance = AwsAmplify()
+    //    static public let instance = AwsAmplify()
     
-//    private let sessionSubject = BehaviorSubject<Optional<AuthSession>>(value: nil)
-//    public var isLoggedIn$: Observable<Bool> {
-//        sessionSubject.map { session in
-//            session != nil
-//        }
-//    }
-
+    //    private let sessionSubject = BehaviorSubject<Optional<AuthSession>>(value: nil)
+    //    public var isLoggedIn$: Observable<Bool> {
+    //        sessionSubject.map { session in
+    //            session != nil
+    //        }
+    //    }
+    
     struct AccessTokenPayload: Decodable {
         var device_key:String
     }
@@ -27,8 +27,8 @@ import AWSMobileClient
     }
     
     public func load(cognitoConfig: JSObject,
-                onSuccess: @escaping () -> (),
-                onError: @escaping (any Error) -> ()) {
+                     onSuccess: @escaping () -> (),
+                     onError: @escaping (any Error) -> ()) {
         initAwsService(cognitoConfig: cognitoConfig, onSuccess: onSuccess, onError: onError)
     }
     
@@ -73,7 +73,7 @@ import AWSMobileClient
         
         DispatchQueue.main.async {
             Amplify.Auth.signInWithWebUI(for: authProvider,
-                                        presentationAnchor: UIApplication.shared.windows.first!, options: .preferPrivateSession()) { result in
+                                         presentationAnchor: UIApplication.shared.windows.first!, options: .preferPrivateSession()) { result in
                 var ret: JSObject = [:]
                 switch result {
                 case .success(_):
@@ -86,12 +86,12 @@ import AWSMobileClient
                         ret["status"] = -2
                     default:
                         ret["status"] = -1
-                    }                  
+                    }
                     onSuccess(ret)
                 }
             }
         }
-    
+        
     }
     
     public func signOut(
@@ -102,14 +102,14 @@ import AWSMobileClient
             var ret: JSObject = [:]
             
             switch result {
-                case .success:
-                    ret["status"] = 0
-                    onSuccess(ret)
-                case .failure(let authError):
-                    print("\(self.TAG) Sign out failed with error \(authError)")
-                    ret["status"] = -1
-                    onSuccess(ret)
-                }
+            case .success:
+                ret["status"] = 0
+                onSuccess(ret)
+            case .failure(let authError):
+                print("\(self.TAG) Sign out failed with error \(authError)")
+                ret["status"] = -1
+                onSuccess(ret)
+            }
         }
     }
     
@@ -121,7 +121,7 @@ import AWSMobileClient
             do {
                 let session = try result.get()
                 var ret: JSObject = [:]
-
+                
                 // Get user sub or identity id
                 if let identityProvider = session as? AuthCognitoIdentityProvider {
                     let usersub = try identityProvider.getUserSub().get()
@@ -130,13 +130,13 @@ import AWSMobileClient
                     
                     ret["identityId"] = identityId
                 }
-
+                
                 // Get AWS credentials
                 // if let awsCredentialsProvider = session as? AuthAWSCredentialsProvider {
                 //     let credentials = try awsCredentialsProvider.getAWSCredentials().get()
                 //     print("Access key - \(credentials.accessKey) ")
                 // }
-
+                
                 // Get cognito user pool token
                 if let cognitoTokenProvider = session as? AuthCognitoTokensProvider {
                     let tokens = try cognitoTokenProvider.getCognitoTokens().get()
@@ -148,27 +148,27 @@ import AWSMobileClient
                     
                     // Retrieve the device key from the payload of access token
                     let accessToken = tokens.accessToken as NSString
-//                    print("\(self.TAG) accessToken - \(tokens.idToken) ")
+                    //                    print("\(self.TAG) accessToken - \(tokens.idToken) ")
                     let chunks = accessToken.components(separatedBy: ".")
                     let accessTokenPayload = self.decodeJWTPart(part: chunks[1])
                     let deviceKey = accessTokenPayload?.device_key
-
+                    
                     ret["deviceKey"] = deviceKey
                     ret["status"] = 0
                 } else {
                     ret["status"] = -1
                 }
                 
-//                self.sessionSubject.onNext(session)
+                //                self.sessionSubject.onNext(session)
                 
                 print("\(self.TAG) - Fetch Auth Session successfully")
-//                print("\(self.TAG) - \(ret)")
+                //                print("\(self.TAG) - \(ret)")
                 onSuccess(ret)
             } catch {
                 var ret: JSObject = [:]
                 ret["status"] = -1
                 if let authError = error as? AuthError
-                    {
+                {
                     let cognitoAuthError = authError
                     switch cognitoAuthError {
                     case .signedOut:
@@ -177,7 +177,7 @@ import AWSMobileClient
                         ret["status"] = -1
                     }
                 }
-               
+                
                 onSuccess(ret)
                 print("\(self.TAG) Fetch auth session failed with error - \(error)")
             }
@@ -196,7 +196,7 @@ import AWSMobileClient
                 var userAttributes: JSObject = [:]
                 
                 attributes.forEach { attribute in
-                    userAttributes[attribute.key.rawValue] = attribute.value
+                    userAttributes[attribute.key.rawValue.replacingOccurrences(of: "custom:", with: "")] = attribute.value
                 }
                 ret["userAttributes"] = userAttributes
                 ret["status"] = 0
@@ -206,7 +206,7 @@ import AWSMobileClient
             } catch {
                 ret["status"] = -1
                 if let authError = error as? AuthError
-                    {
+                {
                     let cognitoAuthError = authError
                     switch cognitoAuthError {
                     case .signedOut:
@@ -217,6 +217,38 @@ import AWSMobileClient
                 }
                 onSuccess(ret)
                 print("\(self.TAG) Fetch user attributes failed with error - \(error)")
+            }
+        }
+    }
+    
+    public func updateUserAttributes(
+        userAttributes: [AuthUserAttribute],
+        onSuccess: @escaping (JSObject) -> (),
+        onError: @escaping (any Error) -> ()
+    ) {
+        var ret: JSObject = [:]
+        Amplify.Auth.update(userAttributes: userAttributes) { result in
+            do {
+                let attributes = try result.get()
+                
+                ret["status"] = 0
+                
+                print("\(self.TAG) - update user attributes successfully")
+                self.getUserAttributes(onSuccess: onSuccess, onError: onError)
+            } catch {
+                ret["status"] = -1
+                if let authError = error as? AuthError
+                {
+                    let cognitoAuthError = authError
+                    switch cognitoAuthError {
+                    case .signedOut:
+                        ret["status"] = -3
+                    default:
+                        ret["status"] = -1
+                    }
+                }
+                onSuccess(ret)
+                print("\(self.TAG) update user attributes failed with error - \(error)")
             }
         }
     }
@@ -234,7 +266,7 @@ import AWSMobileClient
         }
         return stringTobeEncoded
     }
-
+    
     func decodeJWTPart(part: String) -> AccessTokenPayload? {
         let payloadPaddingString = base64StringWithPadding(encodedString: part)
         guard let payloadData = Data(base64Encoded: payloadPaddingString) else {
@@ -307,38 +339,38 @@ import AWSMobileClient
             Amplify.Hub.listen(to: .auth) { payload in
                 
                 switch payload.eventName {
-                    case HubPayload.EventName.Auth.signedIn:
+                case HubPayload.EventName.Auth.signedIn:
                     print("\(self.TAG) User signed in")
                     // Update UI
                     break
                     
-                    case HubPayload.EventName.Auth.sessionExpired:
+                case HubPayload.EventName.Auth.sessionExpired:
                     print("\(self.TAG) Session expired")
-                        // Re-authenticate the user
-                    break
-
-                    case HubPayload.EventName.Auth.signedOut:
-//                    self.sessionSubject.onNext(nil)
-                    print("\(self.TAG) User signed out")
-                        // Update UI
-                    break
-
-                    case HubPayload.EventName.Auth.userDeleted:
-                    print("\(self.TAG) User deleted")
-                        // Update UI
+                    // Re-authenticate the user
                     break
                     
-                    case HubPayload.EventName.Auth.socialWebUISignInAPI:
-                    print("\(self.TAG) Social login")
-//                    self.fetchAuthSession { _ in } onError: { _ in }
-
+                case HubPayload.EventName.Auth.signedOut:
+                    //                    self.sessionSubject.onNext(nil)
+                    print("\(self.TAG) User signed out")
+                    // Update UI
                     break
-
-                    default:
-                        break
+                    
+                case HubPayload.EventName.Auth.userDeleted:
+                    print("\(self.TAG) User deleted")
+                    // Update UI
+                    break
+                    
+                case HubPayload.EventName.Auth.socialWebUISignInAPI:
+                    print("\(self.TAG) Social login")
+                    //                    self.fetchAuthSession { _ in } onError: { _ in }
+                    
+                    break
+                    
+                default:
+                    break
                 }
                 
-//                print("\(self.TAG) Amplify.Hub.listen \(payload)")
+                //                print("\(self.TAG) Amplify.Hub.listen \(payload)")
             }
             onSuccess()
         } catch {
@@ -347,14 +379,14 @@ import AWSMobileClient
         }
     }
     
-//    public func getSession() -> Optional<AuthSession> {
-//         do {
-//             return try self.sessionSubject.value()
-//         } catch {
-//             return nil
-//         }
-//     }
-
+    //    public func getSession() -> Optional<AuthSession> {
+    //         do {
+    //             return try self.sessionSubject.value()
+    //         } catch {
+    //             return nil
+    //         }
+    //     }
+    
     // public func hasFullRegistration() -> Observable<Bool> {
     //     return Observable.create { observer in
     //         AWSMobileClient.default().getUserAttributes { (userAttributes, error) in

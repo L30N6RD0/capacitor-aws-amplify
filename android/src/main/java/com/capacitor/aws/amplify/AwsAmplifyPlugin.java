@@ -75,4 +75,15 @@ public class AwsAmplifyPlugin extends Plugin {
         call.reject(error.toString());
       });
   }
+
+  @RequiresApi(api = Build.VERSION_CODES.N)
+  @PluginMethod
+  public void updateUserAttributes(PluginCall call) {
+    var userAttributes = call.getArray("attributes");
+    implementation.updateUserAttributes(userAttributes,
+      result -> call.resolve(result),
+      error -> {
+        call.reject(error.toString());
+      });
+  }
 }

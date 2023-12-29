@@ -18,6 +18,7 @@ npx cap sync
 * [`federatedSignIn(...)`](#federatedsignin)
 * [`fetchAuthSession()`](#fetchauthsession)
 * [`getUserAttributes()`](#getuserattributes)
+* [`updateUserAttributes(...)`](#updateuserattributes)
 * [`signOut()`](#signout)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
@@ -87,6 +88,21 @@ fetchAuthSession() => Promise<CognitoAuthSession>
 ```typescript
 getUserAttributes() => Promise<{ status: AwsAmplifyPluginResponseStatus; userAttributes: Record<string, string>; }>
 ```
+
+**Returns:** <code>Promise&lt;{ status: <a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a>; userAttributes: <a href="#record">Record</a>&lt;string, string&gt;; }&gt;</code>
+
+--------------------
+
+
+### updateUserAttributes(...)
+
+```typescript
+updateUserAttributes(options: { attributes: { name: AuthUserAttributeKey | string; value: string; }[]; }) => Promise<{ status: AwsAmplifyPluginResponseStatus; userAttributes: Record<string, string>; }>
+```
+
+| Param         | Type                                                             |
+| ------------- | ---------------------------------------------------------------- |
+| **`options`** | <code>{ attributes: { name: string; value: string; }[]; }</code> |
 
 **Returns:** <code>Promise&lt;{ status: <a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a>; userAttributes: <a href="#record">Record</a>&lt;string, string&gt;; }&gt;</code>
 
@@ -163,5 +179,24 @@ Construct a type with a set of properties K of type T
 | **`Facebook`** | <code>'Facebook'</code>        |
 | **`Amazon`**   | <code>'LoginWithAmazon'</code> |
 | **`Apple`**    | <code>'SignInWithApple'</code> |
+
+
+#### AuthUserAttributeKey
+
+| Members                 | Value                            |
+| ----------------------- | -------------------------------- |
+| **`address`**           | <code>'address'</code>           |
+| **`birthDate`**         | <code>'birthDate'</code>         |
+| **`email`**             | <code>'email'</code>             |
+| **`familyName`**        | <code>'familyName'</code>        |
+| **`gender`**            | <code>'gender'</code>            |
+| **`givenName`**         | <code>'givenName'</code>         |
+| **`locale`**            | <code>'locale'</code>            |
+| **`middleName`**        | <code>'middleName'</code>        |
+| **`name`**              | <code>'name'</code>              |
+| **`nickname`**          | <code>'nickname'</code>          |
+| **`phoneNumber`**       | <code>'phoneNumber'</code>       |
+| **`picture`**           | <code>'picture'</code>           |
+| **`preferredUsername`** | <code>'preferredUsername'</code> |
 
 </docgen-api>
