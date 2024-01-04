@@ -154,7 +154,13 @@ public class AwsAmplify {
               onError);
           },
           error -> {
-            onError.accept(error);
+            Log.e(TAG, "signInWithSocialWebUI error: ", error);
+            JSObject ret = new JSObject();
+            ret.put("status", -1);
+            if (AuthException.UserCancelledException.class.isInstance(error)) {
+               ret.put("status", -2);
+            }
+            onSuccess.accept(ret);
           });
       }
     }, error -> {

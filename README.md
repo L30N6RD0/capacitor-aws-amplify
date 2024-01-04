@@ -9,6 +9,34 @@ npm install @falconeta/capacitor-aws-amplify
 npx cap sync
 ```
 
+## android config
+
+Inside MainActivity
+
+```java
+@Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    .
+    .
+    .
+    if (data == null){
+      Amplify.Auth.handleWebUISignInResponse(null);
+    }
+
+  }
+```
+Inside gradle
+
+```gradle
+    // Amplify core dependency
+    implementation 'com.amplifyframework:core:1.38.7'
+
+    // AWS Cognito dependency
+    implementation 'com.amplifyframework:aws-auth-cognito:1.38.7'
+```
+
+
 ## API
 
 <docgen-index>
