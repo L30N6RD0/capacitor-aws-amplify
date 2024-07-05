@@ -270,6 +270,29 @@ public class AwsAmplify {
 
   }
 
+  /**
+   * delete user of the current device.
+   *
+   * @param onSuccess success callback.
+   * @param onError   error callback.
+   */
+  @RequiresApi(api = Build.VERSION_CODES.N)
+  public void deleteUser(@NonNull Consumer<JSObject> onSuccess,
+                      @NonNull Consumer<AuthException> onError) {
+    JSObject ret = new JSObject();
+
+    Amplify.Auth.deleteUser(
+            () -> {
+              ret.put("status", 0);
+              onSuccess.accept(ret);
+            },
+            error -> {
+              ret.put("status", -1);
+              onSuccess.accept(ret);
+            }
+    );
+  }
+
   private AuthUserAttributeKey getAttributeKey(String key){
     switch(key){
       case "address":

@@ -125,6 +125,16 @@ public class AwsAmplifyPlugin: CAPPlugin {
         
     }
     
+    @objc func deleteUser(_ call: CAPPluginCall) {
+        implementation.deleteUser(
+            onSuccess: {
+                call.resolve(["status": 0])
+            },
+            onError: {error in
+                call.resolve(["status": -1])
+            })
+    }
+    
     private func getAttributeKey(key: String) -> AuthUserAttributeKey{
         switch(key){
         case "address":

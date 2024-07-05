@@ -48,6 +48,7 @@ Inside gradle
 * [`getUserAttributes()`](#getuserattributes)
 * [`updateUserAttributes(...)`](#updateuserattributes)
 * [`signOut()`](#signout)
+* [`deleteUser()`](#deleteuser)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 * [Enums](#enums)
@@ -141,6 +142,17 @@ updateUserAttributes(options: { attributes: { name: AuthUserAttributeKey | strin
 
 ```typescript
 signOut() => Promise<{ status: AwsAmplifyPluginResponseStatus; }>
+```
+
+**Returns:** <code>Promise&lt;{ status: <a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a>; }&gt;</code>
+
+--------------------
+
+
+### deleteUser()
+
+```typescript
+deleteUser() => Promise<{ status: AwsAmplifyPluginResponseStatus; }>
 ```
 
 **Returns:** <code>Promise&lt;{ status: <a href="#awsamplifypluginresponsestatus">AwsAmplifyPluginResponseStatus</a>; }&gt;</code>

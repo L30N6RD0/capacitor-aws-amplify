@@ -2,7 +2,6 @@ import type { FederatedSignInOptions } from '@aws-amplify/auth/lib/types';
 import { WebPlugin } from '@capacitor/core';
 import type { CognitoUser } from 'amazon-cognito-identity-js';
 import { Amplify, Auth } from 'aws-amplify';
-
 import {
   AuthUserAttributeKey,
   AwsAmplifyPlugin,
@@ -100,7 +99,10 @@ export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
             status: AwsAmplifyPluginResponseStatus.Ok,
             userAttributes:
               attributes?.reduce(
-                (acc, data) => ({ ...acc, [data.Name.replace('custom:', '')]: data.Value }),
+                (acc, data) => ({
+                  ...acc,
+                  [data.Name.replace('custom:', '')]: data.Value,
+                }),
                 {},
               ) || {},
           });
@@ -168,6 +170,16 @@ export class AwsAmplifyWeb extends WebPlugin implements AwsAmplifyPlugin {
         status: AwsAmplifyPluginResponseStatus.Ok,
       }))
       .catch(error => this.handleError(error, 'signOut'));
+  }
+
+  async deleteUser(): Promise<{ status: AwsAmplifyPluginResponseStatus }> {
+    try {
+      await Auth.deleteUser();
+      return { status: AwsAmplifyPluginResponseStatus.Ok };
+    } catch (error) {
+      console.log(error);
+      return { status: AwsAmplifyPluginResponseStatus.Ko };
+    }
   }
 
   private getCognitoAuthSession(user: CognitoUser, identityId: string) {

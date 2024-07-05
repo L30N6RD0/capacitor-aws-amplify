@@ -11,4 +11,5 @@ CAP_PLUGIN(AwsAmplifyPlugin, "AwsAmplify",
            CAP_PLUGIN_METHOD(fetchAuthSession, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getUserAttributes, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(updateUserAttributes, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(deleteUser, CAPPluginReturnPromise);
 )

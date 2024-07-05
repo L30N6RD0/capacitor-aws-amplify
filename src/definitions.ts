@@ -19,6 +19,7 @@ export interface AwsAmplifyPlugin {
     userAttributes: Record<string, string>;
   }>;
   signOut(): Promise<{ status: AwsAmplifyPluginResponseStatus }>;
+  deleteUser(): Promise<{ status: AwsAmplifyPluginResponseStatus }>;
 }
 
 export interface CognitoAuthSession {

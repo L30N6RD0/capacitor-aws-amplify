@@ -257,6 +257,23 @@ import AWSMobileClient
         return Amplify.Auth.getCurrentUser()!
     }
     
+    public func deleteUser(
+        onSuccess: @escaping () -> (),
+        onError: @escaping (any Error) -> ()
+    ) {
+        AWSCognitoIdentityUserPool.default().currentUser()?.delete().continueWith(block: { (task) -> Any? in
+            if let error = task.error {
+                onError(error);
+                print("Error deleting user: \(error.localizedDescription)")
+            }
+            if let _ = task.result {
+                onSuccess()
+                print("User deleted successfully.")
+            }
+            return nil
+        })
+    }
+    
     func base64StringWithPadding(encodedString: String) -> String {
         var stringTobeEncoded = encodedString.replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")

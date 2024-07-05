@@ -1,6 +1,6 @@
 {
   "name": "@falconeta/capacitor-aws-amplify",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "plugin that handle amplify features",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -39,6 +39,7 @@
     "swiftlint": "node-swiftlint",
     "docgen": "docgen --api AwsAmplifyPlugin --output-readme README.md --output-json dist/docs.json",
     "build": "npm run clean && npm run docgen && tsc && rollup -c rollup.config.js",
+    "build:no-clean": "npm run docgen && tsc && rollup -c rollup.config.js",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build"
