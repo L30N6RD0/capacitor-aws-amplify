@@ -45,6 +45,41 @@ public class AwsAmplifyPlugin: CAPPlugin {
                 call.reject(error.localizedDescription)
             })
     }
+
+    @objc func signUp(_call : CAPPluginCall) {
+        self.implementation.signUp(
+            username: _call.getString("email") ?? "",
+            password: _call.getString("password") ?? "",
+            onSuccess: { response in
+                _call.resolve(response)
+            }, onError: { error in
+                _call.reject(error.localizedDescription)
+            })
+    }
+
+    @objc func confirmSignUp(_call : CAPPluginCall) {
+        self.implementation.confirmSignUp(
+            username: _call.getString("username") ?? "",
+            confirmationCode: _call.getString("challengeResponse") ?? "",
+            onSuccess: { response in
+                _call.resolve(response)
+            }, onError: { error in
+                _call.reject(error.localizedDescription)
+            })
+    }
+
+    @objc func confirmSignIn(_call : CAPPluginCall) {
+        self.implementation.confirmSignIn(
+            username: _call.getString("username") ?? "",
+            confirmationCode: _call.getString("challengeResponse") ?? "",
+            onSuccess: { response in
+                _call.resolve(response)
+            }, onError: { error in
+                _call.reject(error.localizedDescription)
+            })
+    }
+
+
     
     @objc func signOut(_ call: CAPPluginCall) {
         self.implementation.signOut(
@@ -54,6 +89,8 @@ public class AwsAmplifyPlugin: CAPPlugin {
                 call.reject(error.localizedDescription)
             })
     }
+
+    
     
     @objc func federatedSignIn(_ call: CAPPluginCall) {
         let provider = call.getString("provider") ?? ""
@@ -85,6 +122,7 @@ public class AwsAmplifyPlugin: CAPPlugin {
         
         
     }
+
     @objc func fetchAuthSession(_ call: CAPPluginCall) {
         
         self.implementation.fetchAuthSession(

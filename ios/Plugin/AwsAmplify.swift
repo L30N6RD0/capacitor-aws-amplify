@@ -48,6 +48,55 @@ import AWSMobileClient
         }
     }
     
+    func confirmSignIn(username: String,
+                       confirmationCode: String,
+                       onSuccess: @escaping (AuthSignInResult) -> (),
+                       onError: @escaping (any Error) -> ()) {
+        Amplify.Auth.confirmSignIn(challengeResponse: confirmationCode) { result in
+            do {
+                let signUpResult: AuthSignInResult = try result.get()
+                print ("\(self.TAG) ConfirmSignUp: " + (signUpResult.isSignedIn ? "Sign up confirmed" : "Sign up not complete"))
+                onSuccess(signUpResult)
+            } catch {
+                print ("\(self.TAG) Confirm sign up failed \(error)")
+                onError(error)
+            }
+        }
+    }
+
+    func signUp(email: String,
+                password: String,
+                onSuccess: @escaping (AuthSignUpResult) -> (),
+                onError: @escaping (any Error) -> ()) {
+        Amplify.Auth.signUp(username: email, password: password) { result in
+            do {
+                let signinResult: AuthSignUpResult = try result.get()
+                print ("\(self.TAG) SignUp: " + (signinResult.isSignupComplete ? "Sign up succeeded" : "Sign up not complete"))
+                onSuccess(signinResult)
+            } catch {
+                print ("\(self.TAG) Sign up failed \(error)")
+                onError(error)
+            }
+        }
+    }
+
+    func confirmSignUp(username: String,
+                       confirmationCode: String,
+                       onSuccess: @escaping (AuthSignUpResult) -> (),
+                       onError: @escaping (any Error) -> ()) {
+        Amplify.Auth.confirmSignUp(for: username, confirmationCode: confirmationCode) { result in
+            do {
+                let signUpResult: AuthSignUpResult = try result.get()
+                print ("\(self.TAG) ConfirmSignUp: " + (signUpResult.isSignupComplete ? "Sign up confirmed" : "Sign up not complete"))
+                onSuccess(signUpResult)
+            } catch {
+                print ("\(self.TAG) Confirm sign up failed \(error)")
+                onError(error)
+            }
+        }
+    }
+
+    
     public func federatedSignIn(
         provider: String,
         onSuccess: @escaping (JSObject) -> (),
@@ -213,6 +262,7 @@ import AWSMobileClient
                         ret["status"] = -3
                     default:
                         ret["status"] = -1
+                        self.signOut(onSuccess: onSuccess, onError: onError)
                     }
                 }
                 onSuccess(ret)
@@ -329,7 +379,7 @@ import AWSMobileClient
                 ]),
                 "Auth" : JSONValue.object([
                     "Default" : JSONValue.object([
-                        "authenticationFlowType" : JSONValue.string("USER_SRP_AUTH"),
+                        "authenticationFlowType" : JSONValue.string("CUSTOM_AUTH"),
                         "OAuth" : JSONValue.object([
                             "WebDomain" : JSONValue.string(domain),
                             "AppClientId" : JSONValue.string(clientId),
