@@ -43,6 +43,9 @@ Inside gradle
 
 * [`load(...)`](#load)
 * [`signIn(...)`](#signin)
+* [`signUp(...)`](#signup)
+* [`confirmSignUp(...)`](#confirmsignup)
+* [`confirmSignIn(...)`](#confirmsignin)
 * [`federatedSignIn(...)`](#federatedsignin)
 * [`fetchAuthSession()`](#fetchauthsession)
 * [`getUserAttributes()`](#getuserattributes)
@@ -80,6 +83,51 @@ signIn(options: { email: string; password: string; }) => Promise<CognitoAuthSess
 | Param         | Type                                              |
 | ------------- | ------------------------------------------------- |
 | **`options`** | <code>{ email: string; password: string; }</code> |
+
+**Returns:** <code>Promise&lt;<a href="#cognitoauthsession">CognitoAuthSession</a>&gt;</code>
+
+--------------------
+
+
+### signUp(...)
+
+```typescript
+signUp(options: { email: string; password: string; }) => Promise<CognitoAuthSession>
+```
+
+| Param         | Type                                              |
+| ------------- | ------------------------------------------------- |
+| **`options`** | <code>{ email: string; password: string; }</code> |
+
+**Returns:** <code>Promise&lt;<a href="#cognitoauthsession">CognitoAuthSession</a>&gt;</code>
+
+--------------------
+
+
+### confirmSignUp(...)
+
+```typescript
+confirmSignUp(options: { username: string; challengeResponse: string; }) => Promise<CognitoAuthSession>
+```
+
+| Param         | Type                                                          |
+| ------------- | ------------------------------------------------------------- |
+| **`options`** | <code>{ username: string; challengeResponse: string; }</code> |
+
+**Returns:** <code>Promise&lt;<a href="#cognitoauthsession">CognitoAuthSession</a>&gt;</code>
+
+--------------------
+
+
+### confirmSignIn(...)
+
+```typescript
+confirmSignIn(options: { username: string; challengeResponse: string; }) => Promise<CognitoAuthSession>
+```
+
+| Param         | Type                                                          |
+| ------------- | ------------------------------------------------------------- |
+| **`options`** | <code>{ username: string; challengeResponse: string; }</code> |
 
 **Returns:** <code>Promise&lt;<a href="#cognitoauthsession">CognitoAuthSession</a>&gt;</code>
 
